@@ -1,34 +1,23 @@
 import urllib2 
+from bs4 import BeautifulSoup
+import json
 
-from HTMLParser import HTMLParser  
-
-class MyHTMLParser(HTMLParser):
-
-  def __init__(self):
-    HTMLParser.__init__(self)
-    self.recording = 0 
-    self.data = []
-  def handle_starttag(self, tag, attrs):
-    if tag == 'tbody':
-      for name, value in attrs:
-        if name == 'id' and value == 'yui_3_18_1_4_1478834569561_116':
-          print name, value
-          print "Encountered the beginning of a %s tag" % tag 
-          self.recording = 1 
-
-
-  def handle_endtag(self, tag):
-    if tag == 'tbody':
-      self.recording -=1 
-      print "Encountered the end of a %s tag" % tag 
-
-  def handle_data(self, data):
-    if self.recording:
-      self.data.append(data)
-
-p = MyHTMLParser()
-f = urllib2.urlopen('https://sports.yahoo.com/nfl/stats/byteam?group=Offense&cat=Total')
+f = urllib2.urlopen('http://www.espn.com/nfl/statistics/team/_/stat/total')
 html = f.read()
-p.feed(html)
-print p.data
-p.close()
+if html:
+	data = []
+	soup = BeautifulSoup(html, "html5lib")
+	table = soup.find('table', attrs={'class':'tablehead'})
+	table_body = table.find('tbody')
+
+	rows = table_body.find_all('tr')
+	for row in rows:
+		cols = row.find_all('td')
+		cols = [ele.text.strip() for ele in cols]
+		data.append([ele for ele in cols if ele])
+		
+for info in data:
+	for item in info:
+		print item.encode("utf-8")
+
+		
